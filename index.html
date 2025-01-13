@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulaire de saisie des données</title>
+  <style>
+    /* Styles généraux */
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    form {
+      max-width: 500px;
+      margin: 50px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    select,
+    input[type="text"],
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    select:focus,
+    input[type="text"]:focus,
+    button:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+    }
+
+    button {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    /* Design responsive */
+    @media (max-width: 600px) {
+      form {
+        padding: 15px;
+      }
+
+      button {
+        font-size: 16px;
+      }
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4); /* Black with opacity */
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .modal-footer {
+      text-align: right;
+    }
+
+    .btn-cancel, .btn-confirm {
+      padding: 10px 20px;
+      margin: 10px;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    .btn-cancel {
+      background-color: #e74c3c;
+      color: #fff;
+    }
+
+    .btn-confirm {
+      background-color: #2ecc71;
+      color: #fff;
+    }
+  </style>
+  <script>
+    function clearSpecificFields() {
+      // Effacer les valeurs de combobox3 et du champ de saisie uniquement
+      document.getElementById("name").value = "";
+      document.getElementById("additionalInput").value = "";
+    }
+
+    const apiUrl1 = "https://script.google.com/macros/s/AKfycbzudCjKiq-1I7EXkSZz7MTYmFPyUcLDDlhRM_y2qATdfYNihRD4lAZwvwZrXHcnPdVh/exec"; // Remplacer par l'URL de votre application Web
+
+    function calculate() {
+      const inputAboveComboBox = document.getElementById("inputAboveComboBox").value;
+      const additionalInput = document.getElementById("additionalInput").value;
+      const calculatedResult = document.getElementById("calculatedResult");
+
+      // Calculer uniquement si les deux entrées sont des nombres valides
+      if (inputAboveComboBox && additionalInput && !isNaN(inputAboveComboBox) && !isNaN(additionalInput)) {
+        calculatedResult.value = (parseFloat(additionalInput) / parseFloat(inputAboveComboBox)).toFixed(2);
+      } else {
+        calculatedResult.value = ""; // Effacer le résultat si les entrées sont invalides
+      }
+    }
+
+    async function submitForm(event) {
+      event.preventDefault(); // Empêcher le rechargement de la page lors de la soumission du formulaire
+
+      // Afficher la fenêtre modale de confirmation
+      document.getElementById("confirmationModal").style.display = "block";
+    }
+
+    function confirmSubmit() {
+      const form = document.getElementById("dataForm");
+      const formData = new FormData(form);
+
+      fetch(apiUrl1, {
+        method: "POST",
+        body: new URLSearchParams(formData), // Envoyer les données sous forme d'URL-encodée
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.status === "success") {
+          alert("Les données ont été envoyées avec succès.");
+          clearSpecificFields(); // Effacer le formulaire
+        } else {
+          alert("Erreur : " + result.message);
+        }
+        // Fermer la fenêtre modale après la soumission
+        document.getElementById("confirmationModal").style.display = "none";
+      })
+      .catch(error => {
+        console.error("Erreur de soumission :", error);
+        document.getElementById("confirmationModal").style.display = "none";
+      });
+    }
+
+    function cancelSubmit() {
+      // Fermer la fenêtre modale sans envoyer les données
+      document.getElementById("confirmationModal").style.display = "none";
+    }
+
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxkq3uQOgKIitmMpNl4n2r9yNSPCIXGLB_twxuaW8V4lgrfH7DRtrPF6DZNi_6vUcbc9Q/exec"; // Remplacer par l'URL de votre application Web
+
+    let groupData = {};
+    let combobox3Data = [];
+
+    async function fetchData() {
+      try {
+        const response = await fetch(scriptUrl);
+        const data = await response.json();
+
+        groupData = data.groups;
+        combobox3Data = data.combobox3Data;
+
+        populateComboBox1();
+        populateComboBox3();
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+        alert("Une erreur s'est produite lors de la récupération des données.");
+      }
+    }
+
+    function populateComboBox1() {
+      const comboBox1 = document.getElementById("group");
+      Object.keys(groupData).forEach(group => {
+        const option = document.createElement("option");
+        option.value = group;
+        option.textContent = group;
+        comboBox1.appendChild(option);
+      });
+    }
+
+    function populateComboBox3() {
+      const comboBox3 = document.getElementById("combobox3");
+      combobox3Data.forEach(task => {
+        const option = document.createElement("option");
+        option.value = task;
+        option.textContent = task;
+        comboBox3.appendChild(option);
+      });
+    }
+
+    function updateComboBox2() {
+      const comboBox1 = document.getElementById("group");
+      const comboBox2 = document.getElementById("name");
+      const selectedGroup = comboBox1.value;
+
+      comboBox2.innerHTML = '<option value="">-- Sélectionner --</option>'; // Effacer les options précédentes
+      if (groupData[selectedGroup]) {
+        groupData[selectedGroup].forEach(name => {
+          const option = document.createElement("option");
+          option.value = name;
+          option.textContent = name;
+          comboBox2.appendChild(option);
+        });
+      }
+    }
+
+    window.onload = fetchData;
+  </script>
+</head>
+<body>
+  <form id="dataForm" onsubmit="submitForm(event)">
+    <label for="inputAboveComboBox">OBJECTIF DE REND :</label>
+    <input type="text" id="inputAboveComboBox" name="inputAboveComboBox" oninput="calculate()" placeholder="Entrez une valeur ici" required>
+
+    <label for="group">ÉQUIPE :</label>
+    <select id="group" name="group" onchange="updateComboBox2()" required>
+      <option value="">-- Sélectionner -- </option>
+    </select>
+
+    <label for="name">NOM :</label>
+    <select id="name" name="name" required>
+      <option value="">-- Sélectionner --</option>
+    </select>
+
+    <label for="combobox3">PARCELLES :</label>
+    <select id="combobox3" name="combobox3" required>
+      <option value="">-- Sélectionner --</option>
+    </select>
+
+    <label for="additionalInput">QUANTITÉ KG :</label>
+    <input type="text" id="additionalInput" name="additionalInput" oninput="calculate()" placeholder="Entrez des données supplémentaires ici" required>
+
+    <label for="calculatedResult">HEURES ESTIMÉES :</label>
+    <input type="text" id="calculatedResult" name="calculatedResult" readonly>
+
+    <button type="submit">Envoyer</button>
+  </form>
+
+  <!-- Modal de confirmation -->
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <h3>Êtes-vous sûr de vouloir soumettre ce formulaire ?</h3>
+      <div class="modal-footer">
+        <button class="btn-confirm" onclick="confirmSubmit()">Confirmer</button>
+        <button class="btn-cancel" onclick="cancelSubmit()">Annuler</button>
+      </div>
+    </div>
+  </div>
+  <div id="confirmationModal" class="modal">
+    <div class="modal-content">
+      <p>Êtes-vous sûr de vouloir soumettre le formulaire ?</p>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="cancelSubmit()">Annuler</button>
+        <button class="btn-confirm" onclick="confirmSubmit()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <table id="data-table" border="1">
+    <thead>
+      <tr>
+        <th><input type="text" id="filter-timestamp" placeholder="Filtrer par Timestamp" oninput="applyFilters()"></th>
+        <th><input type="text" id="filter-objective" placeholder="Filtrer par Objectif" oninput="applyFilters()"></th>
+        <th><input type="text" id="filter-group" placeholder="Filtrer par Équipe" oninput="applyFilters()"></th>
+        <th><input type="text" id="filter-name" placeholder="Filtrer par Nom" oninput="applyFilters()"></th>
+        <th><input type="text" id="filter-task" placeholder="Filtrer par Tâche" oninput="applyFilters()"></th>
+        <th><input type="text" id="filter-quantity" placeholder="Filtrer par Quantité" oninput="applyFilters()"></th>
+        <th><input type="text" id="filter-hours" placeholder="Filtrer par Heures" oninput="applyFilters()"></th>
+      </tr>
+      <tr>
+        <th>Timestamp</th>
+        <th>Objectif</th>
+        <th>Équipe</th>
+        <th>Nom</th>
+        <th>Tâche</th>
+        <th>Quantité (KG)</th>
+        <th>Heures Estimées</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data rows will be inserted here -->
+    </tbody>
+  </table>
+</body>
+</html>
